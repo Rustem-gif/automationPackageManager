@@ -16,10 +16,11 @@ REPOS=(
   "KB_Regression|https://github.com/RUSTEMATOR/KB_Regression.git"
   "depositModalMonitor|https://github.com/RUSTEMATOR/depositModalMonitor.git"
   "Unpublish|https://github.com/RUSTEMATOR/Unpublish.git"
+  "AutomationPackageManager|https://github.com/Rustem-gif/automationPackageManager.git"
 )
 
 # Default base directory (user can change from menu)
-BASE_DIR="${HOME}/kb-repos"
+BASE_DIR="${HOME}/Desktop/automation"
 
 # ───────────────────────── Helpers ────────────────────────
 
@@ -168,6 +169,7 @@ show_menu() {
     echo -e "${GREEN}7)${NC} Install dependencies for ALL installed repos"
     echo -e "${GREEN}8)${NC} List installed repositories"
     echo -e "${YELLOW}9)${NC} Change base install directory"
+    echo -e "${GREEN}10)${NC} Update package manager"
     echo -e "${RED}0)${NC} Exit"
     echo
     echo -n "Please choose an option [0-9]: "
@@ -263,6 +265,9 @@ while true; do
             ;;
         9)
             change_base_dir
+            ;;
+
+        10) clone_or_update_repo "AutomationPackageManager" "https://github.com/Rustem-gif/automationPackageManager.git"
             ;;
         0)
             echo -e "${MAGENTA}Exiting package manager...${NC}"
