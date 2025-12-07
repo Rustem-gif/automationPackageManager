@@ -16,7 +16,6 @@ REPOS=(
   "KB_Regression|https://github.com/RUSTEMATOR/KB_Regression.git"
   "depositModalMonitor|https://github.com/RUSTEMATOR/depositModalMonitor.git"
   "Unpublish|https://github.com/RUSTEMATOR/Unpublish.git"
-  "AutomationPackageManager|https://github.com/Rustem-gif/automationPackageManager.git"
 )
 
 # Default base directory (user can change from menu)
@@ -156,6 +155,59 @@ change_base_dir() {
     echo -e "${GREEN}✔ Base directory updated to:${NC} ${CYAN}${BASE_DIR}${NC}"
 }
 
+update_script() {
+    local script_path="${BASH_SOURCE[0]}"
+    local script_dir="$(cd "$(dirname "$script_path")" && pwd)"
+    local script_name="$(basename "$script_path")"
+    
+    echo -e "${YELLOW}→ Checking for script updates...${NC}"
+    echo -e "${BLUE}Script location: ${script_dir}/${script_name}${NC}"
+    
+    # Check if we're in a git repository
+    if ! git -C "$script_dir" rev-parse --git-dir > /dev/null 2>&1; then
+        echo -e "${RED}✖ This script is not in a git repository.${NC}"
+        echo -e "${YELLOW}  Cannot auto-update. Please update manually.${NC}"
+        return 1
+    fi
+    
+    # Save current branch
+    local current_branch=$(git -C "$script_dir" rev-parse --abbrev-ref HEAD)
+    
+    # Fetch latest changes
+    echo -e "${YELLOW}→ Fetching latest changes...${NC}"
+    git -C "$script_dir" fetch origin
+    
+    # Check if there are updates
+    local local_commit=$(git -C "$script_dir" rev-parse HEAD)
+    local remote_commit=$(git -C "$script_dir" rev-parse origin/$current_branch 2>/dev/null)
+    
+    if [ -z "$remote_commit" ]; then
+        echo -e "${RED}✖ Could not find remote branch.${NC}"
+        return 1
+    fi
+    
+    if [ "$local_commit" = "$remote_commit" ]; then
+        echo -e "${GREEN}✔ Script is already up to date!${NC}"
+        return 0
+    fi
+    
+    # Pull updates
+    echo -e "${YELLOW}→ Updating script...${NC}"
+    if git -C "$script_dir" pull --ff-only origin "$current_branch"; then
+        echo -e "${GREEN}✔ Script successfully updated!${NC}"
+        echo -e "${CYAN}  Please restart the script to use the new version.${NC}"
+        read -rp "Restart now? [Y/n]: " restart
+        if [[ "$restart" =~ ^[Yy]?$ ]]; then
+            echo -e "${MAGENTA}Restarting script...${NC}"
+            exec "$script_path"
+        fi
+    else
+        echo -e "${RED}✖ Failed to update script.${NC}"
+        echo -e "${YELLOW}  You may have local changes. Please update manually.${NC}"
+        return 1
+    fi
+}
+
 # ─────────────────────── Menu / UI ────────────────────────
 
 show_menu() {
@@ -169,10 +221,10 @@ show_menu() {
     echo -e "${GREEN}7)${NC} Install dependencies for ALL installed repos"
     echo -e "${GREEN}8)${NC} List installed repositories"
     echo -e "${YELLOW}9)${NC} Change base install directory"
-    echo -e "${GREEN}10)${NC} Update package manager"
+    echo -e "${BLUE}u)${NC} Update this script"
     echo -e "${RED}0)${NC} Exit"
     echo
-    echo -n "Please choose an option [0-9]: "
+    echo -n "Please choose an option [0-9/u]: "
 }
 
 choose_repo_interactive() {
@@ -266,8 +318,8 @@ while true; do
         9)
             change_base_dir
             ;;
-
-        10) clone_or_update_repo "AutomationPackageManager" "https://github.com/Rustem-gif/automationPackageManager.git"
+        u|U)
+            update_script
             ;;
         0)
             echo -e "${MAGENTA}Exiting package manager...${NC}"
